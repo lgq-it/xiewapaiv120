@@ -248,7 +248,7 @@ public final class KeyVault {
         Map<String, List<byte[]>> out = new LinkedHashMap<>();
         HexFormat hex = HexFormat.of();
 
-        // 数组形态：{"205273411": ["a754...", "b123..."]}
+        // 数组形态：{"<账号ID>": ["a754...", "b123..."]}
         Matcher array = ARRAY_ENTRY.matcher(text);
         while (array.find()) {
             String id = array.group(1);
@@ -260,7 +260,7 @@ public final class KeyVault {
             }
         }
 
-        // 单值形态：{"205273411": "a754..."}（兼容老的 keys.json）
+        // 单值形态：{"<账号ID>": "a754..."}（兼容老的 keys.json）
         Matcher scalar = SCALAR_ENTRY.matcher(text);
         while (scalar.find()) {
             String id = scalar.group(1);

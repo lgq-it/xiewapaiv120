@@ -32,7 +32,7 @@ public final class ProfileKeyReader {
     /**
      * 判断某个账号目录下是否有可用于解析密钥的 profile.cfg。
      *
-     * @param profileDirectory 账号目录（例如 {@code .../saves/205273411}）
+     * @param profileDirectory 账号目录（例如 {@code .../saves/<账号ID>}）
      * @return 存在返回 true
      */
     public static boolean hasProfile(Path profileDirectory) {

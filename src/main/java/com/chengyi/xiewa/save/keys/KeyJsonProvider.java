@@ -16,7 +16,7 @@ import com.chengyi.xiewa.save.core.SaveFormatException;
  * 从 {@code keys.json} 读取存档密钥。
  *
  * <p>文件由「取密钥工具」生成，格式为扁平的 {@code {"账号ID": "hex密钥"}}，
- * 例如 {@code {"205273411": "a75486..."}}。结构简单，故不引入 JSON 库，
+ * 例如 {@code {"<账号ID>": "a75486..."}}。结构简单，故不引入 JSON 库，
  * 直接用正则提取键值对——若将来格式变复杂，再换成正式解析器。
  */
 public final class KeyJsonProvider implements SaveKeyProvider {

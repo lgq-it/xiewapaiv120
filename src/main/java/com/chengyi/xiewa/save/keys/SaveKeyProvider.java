@@ -14,7 +14,7 @@ public interface SaveKeyProvider {
     /**
      * 取得指定账号的存档密钥。
      *
-     * @param profileId 账号 ID（存档目录名，例如 {@code 205273411}）
+     * @param profileId 账号 ID（存档目录名，例如 {@code <账号ID>}）
      * @return 32 字节密钥
      * @throws SaveFormatException 找不到该账号的密钥，或密钥格式非法
      */
