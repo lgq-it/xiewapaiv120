@@ -2172,30 +2172,7 @@ public final class MainFrame extends JFrame implements CharacterCard.Listener {
         SwingUtilities.invokeLater(() -> {
             MainFrame frame = new MainFrame();
             frame.setVisible(true);
-            startKeyHarvest(frame);
         });
     }
 
-    /**
-     * 后台把本机所有游戏账号的密钥收进密钥库。
-     *
-     * <p>这是「拷到别的电脑也能用」的自动化来源：在装有游戏的机器上跑过一次之后，
-     * 密钥就落在程序目录的 {@code keyvault.json} 里，整个文件夹搬走时一并带走。
-     * 放后台线程是因为 DPAPI 解密钥要读 exe、调系统接口，几十毫秒到几百毫秒，
-     * 放主线程会让窗口先白一下。
-     *
-     * @param frame 用于回写日志的主窗口
-     */
-    private static void startKeyHarvest(MainFrame frame) {
-        Thread worker = new Thread(() -> {
-            int stored = SaveKeys.harvest();
-            if (stored > 0) {
-                SwingUtilities.invokeLater(() -> frame.log(
-                        "已收录 %d 个账号的密钥到密钥库，之后整个文件夹拷到别的电脑也能直接打开存档"
-                                .formatted(stored)));
-            }
-        }, "key-vault-harvest");
-        worker.setDaemon(true);
-        worker.start();
-    }
 }

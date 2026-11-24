@@ -86,24 +86,8 @@ mkdir -p "$DIST_DIR"
   --dest "$DIST_DIR" \
   --java-options "-Dfile.encoding=UTF-8"
 
-# ---------------------------------------------------------------- 收尾：保护已有密钥
-# 程序运行后会往自己目录写 keyvault.json（自动积累的存档密钥）。
-# 重新打包会覆盖整个文件夹，所以这里把旧的那份搬回来，避免重建一次丢一次密钥。
+# ---------------------------------------------------------------- 收尾
 OUT_DIR="$DIST_DIR/$APP_NAME"
-RECOVERED=""
-if [ -f "$PROJECT_DIR/keyvault.json" ]; then
-  cp "$PROJECT_DIR/keyvault.json" "$OUT_DIR/keyvault.json"
-  RECOVERED="$PROJECT_DIR/keyvault.json"
-elif [ -n "${BACKUP_VAULT:-}" ] && [ -f "$BACKUP_VAULT" ]; then
-  cp "$BACKUP_VAULT" "$OUT_DIR/keyvault.json"
-  RECOVERED="$BACKUP_VAULT"
-fi
-
 echo
 echo "✓ 构建完成：$OUT_DIR"
 ls -lh "$OUT_DIR" | sed 's/^/    /'
-if [ -n "$RECOVERED" ]; then
-  echo "· 已恢复密钥库：$RECOVERED"
-else
-  echo "· 提示：jar 内置密钥库仍然有效；本次没有额外的 keyvault.json 需要合并。"
-fi

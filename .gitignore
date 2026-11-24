@@ -19,6 +19,7 @@ Thumbs.db
 
 # 本地密钥/敏感信息（跨机密钥库，不该进公开仓库）
 src/main/resources/keyvault.json
+/keyvault.json
 
 # 日志与临时
 *.log

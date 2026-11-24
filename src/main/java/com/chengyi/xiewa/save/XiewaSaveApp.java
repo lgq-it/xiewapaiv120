@@ -91,7 +91,7 @@ public final class XiewaSaveApp {
             case "get" -> get(args);
             case "set" -> set(args);
             case "keys" -> keys(resolveSave(args, 1));
-            case "harvest" -> harvest();
+
             case "bean" -> bean(args);
             case "demon" -> demon(args);
             case "tongbao" -> tongbao(args);
@@ -643,7 +643,7 @@ public final class XiewaSaveApp {
                   xiewa-save verify [存档]               校验签名是否自洽
                   xiewa-save list                        列出全部账号存档
                   xiewa-save keys [存档]                 显示密钥来源
-                  xiewa-save harvest                     收录本机所有账号密钥（换电脑后可用）
+
                   xiewa-save get <点分路径> [存档]        读取某个值
                   xiewa-save set <点分路径> <整数> [存档]  原始改值
                   xiewa-save bean <卡槽> <数量>           改功夫豆
@@ -672,7 +672,7 @@ public final class XiewaSaveApp {
      */
     private static int keys(Path save) throws IOException, SaveFormatException {
         System.out.println("本机状态 : " + SaveKeys.localStatusText());
-        System.out.println("密钥库   : " + SaveKeys.vaultStatusText());
+        System.out.println("密钥状态 : " + SaveKeys.vaultStatusText());
         System.out.println("账号     : " + SaveKeys.profileIdOf(save));
 
         List<SaveKeys.Resolution> candidates = SaveKeys.candidates(save);
@@ -706,23 +706,6 @@ public final class XiewaSaveApp {
         return EXIT_OK;
     }
 
-    /**
-     * {@code harvest}：把本机所有游戏账号的密钥收进密钥库。
-     *
-     * <p>在装有游戏的电脑上跑一次，之后整个「chengyi-updatepai」文件夹拷到任何电脑，
-     * 都能直接打开这些账号的存档——不需要用户额外保存任何密钥文件。
-     *
-     * @return 退出码
-     */
-    private static int harvest() {
-        System.out.println("本机状态 : " + SaveKeys.localStatusText());
-        int stored = SaveKeys.harvest();
-        System.out.println(stored == 0
-                ? "没有新密钥可以收录（可能此前已收录过，或本机没有游戏/账号）"
-                : "已收录 " + stored + " 个账号的密钥");
-        System.out.println("密钥库   : " + SaveKeys.vaultStatusText());
-        return EXIT_OK;
-    }
 
     /**
      * 解析末尾的存档路径参数；缺省则取默认存档。

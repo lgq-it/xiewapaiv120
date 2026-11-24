@@ -79,13 +79,6 @@ if not exist "dist" mkdir "dist"
 if errorlevel 1 goto :build_failed
 echo.
 
-rem ---------------------------------------------------------- keep keys
-rem The program writes keyvault.json next to the exe at runtime.
-rem Rebuilding wipes the folder, so copy the backup back if present.
-if exist "keyvault.json" (
-  copy /y "keyvault.json" "dist\%APP_NAME%\keyvault.json" >nul
-  echo      keyvault.json restored from project root
-)
 
 echo Done: dist\%APP_NAME%
 dir /b "dist\%APP_NAME%"

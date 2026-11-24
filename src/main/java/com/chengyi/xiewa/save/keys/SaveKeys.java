@@ -1,6 +1,5 @@
 package com.chengyi.xiewa.save.keys;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -9,26 +8,19 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import com.chengyi.xiewa.save.core.SaveFormatException;
 
 /**
  * 密钥解析总入口。
  *
- * <p>目标是让修改器<b>拷到任何电脑上、选中存档就能直接改</b>，用户完全不需要
- * 关心"密钥"这件事。为此按下列顺序收集候选，交给调用方逐个试解：
- * <ol>
- *   <li><b>本机 DPAPI</b>：从游戏 exe 取熵、用当前 Windows 凭据解 {@code profile.cfg}，
- *       在本机产生存档时这条永远最快最准</li>
- *   <li><b>密钥库</b>：{@link KeyVault}，含 jar 内置的一份 + 程序目录 keyvault.json，
- *       这是换电脑后唯一能走通的路</li>
- *   <li><b>外部 keys.json</b>：兼容旧版工具留下的文件，存在就用，不存在也不影响</li>
- * </ol>
+ * <p>程序读取存档时直接用当前 Windows 用户的本机 DPAPI 解 {@code profile.cfg}，
+ * 密钥只放在内存缓存里，<b>不写盘、不打包、不收集</b>。
+ * 1.1.1 起的新版 {@code XWD3} 信封可离线解；更早的旧格式需要游戏 exe 推导熵。
  *
  * <p>为什么不能"纯自动算出密钥"：存档用 AES-256 加密，密钥是游戏随机生成的 32 字节，
- * 不以任何可推导的形式存在于存档里。离开原机后必须靠一份保存下来的副本，
- * 因此本类的设计重点是「把副本藏进程序自己身上」，而不是「算出副本」。
+ * 不以任何可推导的形式存在于存档里，只存在于当前电脑、当前 Windows 用户的 DPAPI 保护下。
+ * 因此换电脑或换 Windows 用户时，必须在那台机器上重新登录对应账号，程序无法凭空解出别人的存档。
  *
  * <p>结果按账号 ID 缓存，避免每次操作都重跑 DPAPI。
  */
@@ -38,7 +30,7 @@ public final class SaveKeys {
     public enum Source {
         /** 本机 DPAPI 直接解出。 */
         LOCAL_DPAPI("本机 DPAPI"),
-        /** 来自随程序携带的密钥库。 */
+        /** 来自用户自行放置的密钥库。 */
         KEY_VAULT("密钥库"),
         /** 来自外部 keys.json（旧版工具遗留）。 */
         KEY_FILE("keys.json");
@@ -100,18 +92,17 @@ public final class SaveKeys {
             message.append('\n').append(error);
         }
         message.append("\n\n这不是程序出错：存档是 AES 加密的，密钥由游戏随机生成，")
-                .append("只存在产生它的那台电脑上。\n")
-                .append("解决办法：在产生这份存档的那台电脑上打开本程序一次（会自动记住密钥），")
-                .append("再把整个「chengyi-updatepai」文件夹拷过来即可。");
+                .append("只存在产生它的那台电脑、那个 Windows 用户的 DPAPI 下；本程序不收集、不保存密钥。\n")
+                .append("解决办法：在产生这份存档的那台电脑上，用同一个 Windows 用户运行本程序。");
         throw new SaveFormatException(message.toString());
     }
 
     /**
      * 列出这个存档的全部候选密钥，按"最可能正确"排序。
      *
-     * <p>顺序：① 已确认成功过的（缓存）② 本机 DPAPI ③ 密钥库里同账号的
-     * ④ 密钥库里其他账号的 ⑤ 外部 keys.json。后两档是为了兼容
-     * "存档从别的电脑拷过来、目录名已不是原账号 ID"的情况——挨个试总比直接报错好。
+     * <p>顺序：① 已确认成功过的（缓存）② 本机 DPAPI。
+     * 如果用户手动放了一份外部 keyvault.json / keys.json，也会追加为兜底候选；
+     * 程序自身不会生成或写入这些文件。
      *
      * @param savePath 存档路径
      * @return 候选列表（可能为空）
@@ -121,64 +112,16 @@ public final class SaveKeys {
     }
 
     /**
-     * 记住某个密钥确实能解开这份存档，并顺手存进密钥库。
+     * 记住某个密钥确实能解开这份存档。
      *
-     * <p>这一步是"跨机可用"的关键：无论密钥来自 DPAPI、内置库还是外部文件，
-     * 只要被验证为正确，就立即写入程序目录的 keyvault.json，
-     * 之后整个文件夹搬到哪台电脑都能直接打开同一份存档。
+     * <p>只放在内存缓存里，避免每次操作都重跑 DPAPI；密钥不写盘、不收集。
      *
      * @param savePath 存档路径
      * @param working  试解成功的解析结果
      */
     public static void remember(Path savePath, Resolution working) {
-        String profileId = profileIdOf(savePath);
-        CACHE.put(profileId, working);
-        KeyVault.store(profileId, working.key());
+        CACHE.put(profileIdOf(savePath), working);
     }
-
-    /**
-     * 扫描本机全部游戏账号，把能解开的密钥批量存进密钥库。
-     *
-     * <p>在装有游戏的电脑上跑一次，之后把文件夹拷走就能在其他机器上改这些账号的存档。
-     * 由界面启动时在后台线程调用，没有游戏是正常情况，失败不提示。
-     *
-     * @return 本次新收录的密钥条数
-     */
-    public static int harvest() {
-        LocalKeyProvider local = localProvider();
-        if (local == null) {
-            return 0;
-        }
-        Path root;
-        try {
-            root = LocalKeyProvider.savesRoot();
-        } catch (SaveFormatException e) {
-            return 0;
-        }
-        if (!Files.isDirectory(root)) {
-            return 0;
-        }
-        int stored = 0;
-        try (Stream<Path> entries = Files.list(root)) {
-            for (Path directory : entries.filter(Files::isDirectory).toList()) {
-                if (!ProfileKeyReader.hasProfile(directory)) {
-                    continue;
-                }
-                try {
-                    byte[] key = local.keyForDirectory(directory);
-                    if (KeyVault.store(directory.getFileName().toString(), key)) {
-                        stored++;
-                    }
-                } catch (SaveFormatException ignored) {
-                    // 单个账号解不开不影响其他账号，静默跳过
-                }
-            }
-        } catch (IOException e) {
-            return stored;
-        }
-        return stored;
-    }
-
     /**
      * 收集候选密钥的实现。
      *
@@ -203,8 +146,10 @@ public final class SaveKeys {
         if (local != null && profileDirectory != null) {
             try {
                 byte[] key = local.keyForDirectory(profileDirectory);
-                addCandidate(out, seen, new Resolution(key, Source.LOCAL_DPAPI,
-                        local.gameExe().toString()));
+                String detail = local.gameExe() == null
+                        ? "本机 DPAPI（XWD3 信封）"
+                        : local.gameExe().toString();
+                addCandidate(out, seen, new Resolution(key, Source.LOCAL_DPAPI, detail));
             } catch (SaveFormatException e) {
                 errors.add("本机 DPAPI：" + e.getMessage());
             }
@@ -231,7 +176,7 @@ public final class SaveKeys {
             }
         }
         if (vault.isEmpty()) {
-            errors.add("密钥库：内置库与本地库都是空的");
+            errors.add("密钥库：未使用（仅本机 DPAPI 实时解析）");
         }
 
         // ③ 外部 keys.json（旧版工具生成，存在就兼容）
@@ -307,7 +252,13 @@ public final class SaveKeys {
     public static String localStatusText() {
         LocalKeyProvider provider = localProvider();
         if (provider != null) {
-            return "本机 DPAPI 可用（游戏：%s）".formatted(provider.gameExe().getFileName());
+            Path exe = provider.gameExe();
+            String game = exe == null
+                    ? "未找到 XiewaPai.exe，仅支持新版存档"
+                    : exe.getFileName().toString();
+            return provider.hasLegacyEntropy()
+                    ? "本机 DPAPI 可用（游戏：%s）".formatted(game)
+                    : "本机 DPAPI 可用（%s）".formatted(game);
         }
         return localFailure.isEmpty() ? "本机 DPAPI 不可用" : "本机 DPAPI 不可用：" + localFailure;
     }
@@ -320,9 +271,9 @@ public final class SaveKeys {
     public static String vaultStatusText() {
         int total = KeyVault.totalKeyCount();
         if (total == 0) {
-            return "密钥库为空";
+            return "未使用密钥库（仅本机 DPAPI 实时解析）";
         }
-        return "%d 把（%s）".formatted(total, KeyVault.describe());
+        return "检测到外部密钥库 %d 把（%s）".formatted(total, KeyVault.describe());
     }
 
     private static synchronized LocalKeyProvider localProvider() {
@@ -331,7 +282,7 @@ public final class SaveKeys {
             try {
                 localProvider = LocalKeyProvider.tryCreate();
                 if (localProvider == null) {
-                    localFailure = "未找到 XiewaPai.exe";
+                    localFailure = "当前系统不支持 DPAPI";
                 }
             } catch (SaveFormatException e) {
                 localFailure = e.getMessage();
