@@ -1,0 +1,33 @@
+# section	key	itemId	name	scope	maxRolls	rate(%)
+drop_pity	909:1500274	1500274	纯白的通铃长毛	关卡 909	5	50.0
+drop_pity	910:1500567	1500567	火龙珠	关卡 910	12	20.0
+drop_pity	914:1500566	1500566	水龙珠	关卡 914	6	40.0
+drop_pity	916:1500568	1500568	土龙珠	关卡 916	5	50.0
+drop_pity	918:1500565	1500565	木龙珠	关卡 918	8	30.0
+drop_pity	921:1500564	1500564	金龙珠	关卡 921	30	5.0
+drop_pity	926:1500350	1500350	风之光明碎片	关卡 926	6	40.0
+drop_pity	927:1500351	1500351	雷之光明碎片	关卡 927	4	60.0
+drop_pity	928:1500352	1500352	火之光明碎片	关卡 928	5	50.0
+drop_pity	929:1500353	1500353	电之光明碎片	关卡 929	12	20.0
+drop_pity	930:1500354	1500354	神之光明碎片	关卡 930	20	5.0
+drop_pity	pity:ice_soul:英雄	1500579	冰魄魂石	英雄	12	9.0
+drop_pity	pity:ice_soul:史诗	1500579	冰魄魂石	史诗	6	18.0
+drop_pity	pity:water_pearl:英雄	1500566	水龙珠	英雄	20	5.0
+drop_pity	pity:water_pearl:史诗	1500566	水龙珠	史诗	10	10.0
+drop_pity	pity:gold_pearl:史诗	1500564	金龙珠	史诗	34	3.0
+drop_pity	pity:fire_pearl:英雄	1500567	火龙珠	英雄	67	1.5
+drop_pity	pity:fire_pearl:史诗	1500567	火龙珠	史诗	34	3.0
+drop_pity	pity:summon_fengxuewa	1410002	丰雪袜	简单	10	5.0
+drop_pity	pity:summon_jianyunmu	1410014	剑云木	简单	10	5.0
+drop_pity	pity:summon_cailing	1410019	彩翎	简单	10	5.0
+drop_pity	pity:summon_fengzhiya	1410020	风之芽	简单	6	8.0
+jewelry_pity	1100054	1100054	迷你海星	精英	20	5.0
+jewelry_pity	1100055	1100055	深渊鱼吻	精英	20	5.0
+jewelry_pity	1100056	1100056	巨鳌之心	精英	20	5.0
+drop_pity	guardian:屠龙大会:1500579	1500579	冰魄魂石	屠龙大会	100	1.0
+drop_pity	guardian:屠龙大会:1500564	1500564	金龙珠	屠龙大会	100	1.0
+drop_pity	guardian:禁忌墓穴:1500360	1500360	古墓守护石	禁忌墓穴	4	25.0
+drop_pity	guardian:古墓机关阵:1500360	1500360	古墓守护石	古墓机关阵	4	30.0
+drop_pity	monster:1410032	1410032	绝地蜥尾	上古巨蜥	34	3.0
+drop_pity	monster:1410025	1410025	蝎尾毒钩	高手挑战赛	39	2.62
+drop_pity	monster:1410023	1410023	鬼火符	万圣杯	20	5.0
